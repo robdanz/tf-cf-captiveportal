@@ -2,7 +2,7 @@
 
 # Fetch split tunnel and LDF data for each custom profile
 data "http" "custom_profile_excludes" {
-  for_each = { for p in local.custom_profiles : p.id => p }
+  for_each = { for p in local.custom_profiles : p.policy_id => p }
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/exclude"
 
@@ -14,7 +14,7 @@ data "http" "custom_profile_excludes" {
 }
 
 data "http" "custom_profile_includes" {
-  for_each = { for p in local.custom_profiles : p.id => p }
+  for_each = { for p in local.custom_profiles : p.policy_id => p }
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/include"
 
@@ -26,7 +26,7 @@ data "http" "custom_profile_includes" {
 }
 
 data "http" "custom_profile_ldf" {
-  for_each = { for p in local.custom_profiles : p.id => p }
+  for_each = { for p in local.custom_profiles : p.policy_id => p }
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/fallback_domains"
 
@@ -40,26 +40,29 @@ data "http" "custom_profile_ldf" {
 locals {
   # Process each custom profile
   custom_profile_data = {
-    for p in local.custom_profiles : p.id => {
-      policy_id   = p.id
+    for p in local.custom_profiles : p.policy_id => {
+      policy_id   = p.policy_id
       name        = p.name
       description = try(p.description, "")
       enabled     = try(p.enabled, true)
       precedence  = try(p.precedence, 100)
       match       = try(p.match, "")
 
-      # Service mode determines if we need to update split tunnels
+      # Service mode determines what we need to update
       service_mode = try(p.service_mode_v2.mode, "warp")
+      # Split tunnels only apply to warp mode (full tunnel)
       is_warp_mode = try(p.service_mode_v2.mode, "warp") == "warp"
+      # LDF applies to modes that use Cloudflare DNS (warp, proxy, 1dot1) but NOT warp_tunnel_only
+      uses_cf_dns = contains(["warp", "proxy", "1dot1"], try(p.service_mode_v2.mode, "warp"))
 
       # Parse existing excludes
-      existing_excludes = try(jsondecode(data.http.custom_profile_excludes[p.id].response_body).result, [])
+      existing_excludes = try(jsondecode(data.http.custom_profile_excludes[p.policy_id].response_body).result, [])
 
       # Parse existing includes
-      existing_includes = try(jsondecode(data.http.custom_profile_includes[p.id].response_body).result, [])
+      existing_includes = try(jsondecode(data.http.custom_profile_includes[p.policy_id].response_body).result, [])
 
       # Parse existing LDF
-      existing_ldf = try(jsondecode(data.http.custom_profile_ldf[p.id].response_body).result, [])
+      existing_ldf = try(jsondecode(data.http.custom_profile_ldf[p.policy_id].response_body).result, [])
     }
   }
 
@@ -69,8 +72,11 @@ locals {
     if p.is_warp_mode && (length(p.existing_excludes) > 0 || length(p.existing_includes) == 0)
   }
 
-  # All profiles need LDF updates (unless using non-CF DNS, which we can't easily detect)
-  custom_profiles_needing_ldf = local.custom_profile_data
+  # Only profiles using Cloudflare DNS need LDF updates (warp, proxy, 1dot1 - NOT warp_tunnel_only)
+  custom_profiles_needing_ldf = {
+    for id, p in local.custom_profile_data : id => p
+    if p.uses_cf_dns
+  }
 
   # Build merged configurations for each custom profile
   custom_profile_merged_config = {
@@ -92,8 +98,11 @@ locals {
         for d in p.existing_ldf : try(d.suffix, "") if try(d.suffix, "") != ""
       ])
 
-      # Whether to update split tunnels
+      # Whether to update split tunnels (warp mode + exclude mode)
       needs_split_tunnel = p.is_warp_mode && (length(p.existing_excludes) > 0 || length(p.existing_includes) == 0)
+
+      # Whether to update LDF (only if using CF DNS)
+      needs_ldf = p.uses_cf_dns
 
       # Existing excludes (formatted for terraform resource)
       existing_excludes_formatted = [
@@ -126,7 +135,7 @@ locals {
     ) if p.needs_split_tunnel
   }
 
-  # Final merged LDF for each profile
+  # Final merged LDF for each profile (only for profiles using CF DNS)
   custom_profile_merged_ldf = {
     for id, p in local.custom_profile_merged_config : id => concat(
       p.existing_ldf_formatted,
@@ -134,6 +143,6 @@ locals {
         for d in local.captive_portal_local_domain_fallback :
         d if !contains(p.existing_ldf_suffixes, d.suffix)
       ]
-    )
+    ) if p.needs_ldf
   }
 }

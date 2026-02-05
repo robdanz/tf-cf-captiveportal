@@ -21,13 +21,15 @@ output "custom_profiles_status" {
     for id, p in local.custom_profile_merged_config : p.name => {
       policy_id                   = id
       service_mode                = local.custom_profile_data[id].service_mode
+      uses_cf_dns                 = local.custom_profile_data[id].uses_cf_dns
       split_tunnel_updated        = p.needs_split_tunnel
+      ldf_updated                 = p.needs_ldf
       existing_excludes_count     = length(local.custom_profile_data[id].existing_excludes)
       new_excludes_added          = p.needs_split_tunnel ? length([for e in local.captive_portal_split_tunnel_excludes : e if !contains(p.existing_exclude_hosts, e.host)]) : 0
       total_excludes              = p.needs_split_tunnel ? length(try(local.custom_profile_merged_excludes[id], [])) : length(local.custom_profile_data[id].existing_excludes)
       existing_ldf_count          = length(local.custom_profile_data[id].existing_ldf)
-      new_ldf_added               = length([for d in local.captive_portal_local_domain_fallback : d if !contains(p.existing_ldf_suffixes, d.suffix)])
-      total_ldf                   = length(local.custom_profile_merged_ldf[id])
+      new_ldf_added               = p.needs_ldf ? length([for d in local.captive_portal_local_domain_fallback : d if !contains(p.existing_ldf_suffixes, d.suffix)]) : 0
+      total_ldf                   = p.needs_ldf ? length(try(local.custom_profile_merged_ldf[id], [])) : length(local.custom_profile_data[id].existing_ldf)
     }
   }
 }
