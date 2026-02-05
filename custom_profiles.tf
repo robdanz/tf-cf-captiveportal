@@ -2,7 +2,7 @@
 
 # Fetch split tunnel and LDF data for each custom profile
 data "http" "custom_profile_excludes" {
-  for_each = { for p in local.custom_profiles : p.policy_id => p }
+  for_each = { for p in local.custom_profiles : p.id => p }
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/exclude"
 
@@ -14,7 +14,7 @@ data "http" "custom_profile_excludes" {
 }
 
 data "http" "custom_profile_includes" {
-  for_each = { for p in local.custom_profiles : p.policy_id => p }
+  for_each = { for p in local.custom_profiles : p.id => p }
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/include"
 
@@ -26,7 +26,7 @@ data "http" "custom_profile_includes" {
 }
 
 data "http" "custom_profile_ldf" {
-  for_each = { for p in local.custom_profiles : p.policy_id => p }
+  for_each = { for p in local.custom_profiles : p.id => p }
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/fallback_domains"
 
@@ -40,8 +40,8 @@ data "http" "custom_profile_ldf" {
 locals {
   # Process each custom profile
   custom_profile_data = {
-    for p in local.custom_profiles : p.policy_id => {
-      policy_id   = p.policy_id
+    for p in local.custom_profiles : p.id => {
+      policy_id   = p.id
       name        = p.name
       description = try(p.description, "")
       enabled     = try(p.enabled, true)
@@ -53,13 +53,13 @@ locals {
       is_warp_mode = try(p.service_mode_v2.mode, "warp") == "warp"
 
       # Parse existing excludes
-      existing_excludes = try(jsondecode(data.http.custom_profile_excludes[p.policy_id].response_body).result, [])
+      existing_excludes = try(jsondecode(data.http.custom_profile_excludes[p.id].response_body).result, [])
 
       # Parse existing includes
-      existing_includes = try(jsondecode(data.http.custom_profile_includes[p.policy_id].response_body).result, [])
+      existing_includes = try(jsondecode(data.http.custom_profile_includes[p.id].response_body).result, [])
 
       # Parse existing LDF
-      existing_ldf = try(jsondecode(data.http.custom_profile_ldf[p.policy_id].response_body).result, [])
+      existing_ldf = try(jsondecode(data.http.custom_profile_ldf[p.id].response_body).result, [])
     }
   }
 
