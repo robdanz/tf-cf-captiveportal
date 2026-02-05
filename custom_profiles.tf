@@ -1,8 +1,13 @@
 # Fetch and process custom device profiles
 
+# Build map of custom profiles by policy_id (empty if no profiles)
+locals {
+  custom_profiles_map = { for p in local.custom_profiles : p.policy_id => p if can(p.policy_id) }
+}
+
 # Fetch split tunnel and LDF data for each custom profile
 data "http" "custom_profile_excludes" {
-  for_each = { for p in local.custom_profiles : p.policy_id => p }
+  for_each = local.custom_profiles_map
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/exclude"
 
@@ -14,7 +19,7 @@ data "http" "custom_profile_excludes" {
 }
 
 data "http" "custom_profile_includes" {
-  for_each = { for p in local.custom_profiles : p.policy_id => p }
+  for_each = local.custom_profiles_map
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/include"
 
@@ -26,7 +31,7 @@ data "http" "custom_profile_includes" {
 }
 
 data "http" "custom_profile_ldf" {
-  for_each = { for p in local.custom_profiles : p.policy_id => p }
+  for_each = local.custom_profiles_map
 
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/fallback_domains"
 
@@ -37,32 +42,42 @@ data "http" "custom_profile_ldf" {
   }
 }
 
+# First pass: parse raw API responses
 locals {
-  # Process each custom profile
-  custom_profile_data = {
-    for p in local.custom_profiles : p.policy_id => {
-      policy_id   = p.policy_id
+  custom_profile_raw = {
+    for id, p in local.custom_profiles_map : id => {
+      policy_id   = id
       name        = p.name
       description = try(p.description, "")
       enabled     = try(p.enabled, true)
       precedence  = try(p.precedence, 100)
       match       = try(p.match, "")
-
-      # Service mode determines what we need to update
       service_mode = try(p.service_mode_v2.mode, "warp")
-      # Split tunnels only apply to warp mode (full tunnel)
       is_warp_mode = try(p.service_mode_v2.mode, "warp") == "warp"
-      # LDF applies to modes that use Cloudflare DNS (warp, proxy, 1dot1) but NOT warp_tunnel_only
       uses_cf_dns = contains(["warp", "proxy", "1dot1"], try(p.service_mode_v2.mode, "warp"))
+      raw_excludes = try(jsondecode(data.http.custom_profile_excludes[id].response_body).result, null)
+      raw_includes = try(jsondecode(data.http.custom_profile_includes[id].response_body).result, null)
+      raw_ldf = try(jsondecode(data.http.custom_profile_ldf[id].response_body).result, null)
+    }
+  }
+}
 
-      # Parse existing excludes
-      existing_excludes = try(jsondecode(data.http.custom_profile_excludes[p.policy_id].response_body).result, [])
-
-      # Parse existing includes
-      existing_includes = try(jsondecode(data.http.custom_profile_includes[p.policy_id].response_body).result, [])
-
-      # Parse existing LDF
-      existing_ldf = try(jsondecode(data.http.custom_profile_ldf[p.policy_id].response_body).result, [])
+# Second pass: handle nulls and build final data
+locals {
+  custom_profile_data = {
+    for id, p in local.custom_profile_raw : id => {
+      policy_id   = p.policy_id
+      name        = p.name
+      description = p.description
+      enabled     = p.enabled
+      precedence  = p.precedence
+      match       = p.match
+      service_mode = p.service_mode
+      is_warp_mode = p.is_warp_mode
+      uses_cf_dns = p.uses_cf_dns
+      existing_excludes = try([for e in p.raw_excludes : e], [])
+      existing_includes = try([for i in p.raw_includes : i], [])
+      existing_ldf = try([for d in p.raw_ldf : d], [])
     }
   }
 

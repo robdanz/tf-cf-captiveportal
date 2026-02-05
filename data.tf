@@ -62,19 +62,27 @@ locals {
 
   # Parse split tunnel excludes for default profile
   default_excludes_response = jsondecode(data.http.default_split_tunnel_excludes.response_body)
-  default_existing_excludes = try(local.default_excludes_response.result, [])
+  default_raw_excludes      = try(local.default_excludes_response.result, null)
 
   # Parse split tunnel includes for default profile
   default_includes_response = jsondecode(data.http.default_split_tunnel_includes.response_body)
-  default_existing_includes = try(local.default_includes_response.result, [])
+  default_raw_includes      = try(local.default_includes_response.result, null)
 
   # Parse local domain fallback for default profile
-  default_ldf_response     = jsondecode(data.http.default_local_domain_fallback.response_body)
-  default_existing_ldf     = try(local.default_ldf_response.result, [])
+  default_ldf_response = jsondecode(data.http.default_local_domain_fallback.response_body)
+  default_raw_ldf      = try(local.default_ldf_response.result, null)
 
   # Parse custom profiles response
   custom_profiles_response = jsondecode(data.http.custom_profiles.response_body)
   custom_profiles          = try(local.custom_profiles_response.result, [])
+}
+
+# Second locals block to handle null conversion
+locals {
+  # Convert nulls to empty lists (use try to handle null gracefully)
+  default_existing_excludes = try([for e in local.default_raw_excludes : e], [])
+  default_existing_includes = try([for i in local.default_raw_includes : i], [])
+  default_existing_ldf      = try([for d in local.default_raw_ldf : d], [])
 
   # Determine if default profile needs split tunnel updates
   # service_mode_v2.mode = "warp" means Traffic and DNS mode
