@@ -46,6 +46,12 @@ This Terraform project manages Cloudflare WARP device profile settings via direc
 | `1dot1` | ✗ | ✓ |
 | `warp_tunnel_only` | ✗ | ✗ |
 
+### Authentication
+
+Uses a scoped API token (`cloudflare_api_token` variable) with **Zero Trust Edit** permission (account-scoped). The Cloudflare provider uses `api_token`, and all HTTP data sources / curl commands use `Authorization: Bearer <token>`. No email required.
+
+Create the token at: Cloudflare Dashboard > My Profile > API Tokens > Create Token, selecting the "Zero Trust Edit" account permission.
+
 ### Key Patterns
 
 - **Null handling**: API may return `null` instead of `[]`. Use `try([for x in raw : x], [])` pattern.

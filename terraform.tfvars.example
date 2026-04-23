@@ -1,7 +1,11 @@
 # Cloudflare API credentials
 # Copy this file to terraform.tfvars and fill in your values
 # NEVER commit terraform.tfvars to version control
+#
+# Required API token permissions (account-scoped):
+#   - Zero Trust Edit
+#
+# Create a token at: https://dash.cloudflare.com/profile/api-tokens
 
 cloudflare_account_id = "your-account-id-here"
-cloudflare_api_email  = "your-email@example.com"
-cloudflare_api_key    = "your-global-api-key-here"
+cloudflare_api_token  = "your-scoped-api-token-here"

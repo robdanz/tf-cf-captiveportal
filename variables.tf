@@ -4,14 +4,8 @@ variable "cloudflare_account_id" {
   sensitive   = true
 }
 
-variable "cloudflare_api_email" {
-  description = "Cloudflare API Email"
-  type        = string
-  sensitive   = true
-}
-
-variable "cloudflare_api_key" {
-  description = "Cloudflare Global API Key"
+variable "cloudflare_api_token" {
+  description = "Cloudflare scoped API token with Zero Trust Edit permission"
   type        = string
   sensitive   = true
 }

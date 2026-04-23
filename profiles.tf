@@ -13,8 +13,7 @@ resource "null_resource" "default_split_tunnel_excludes" {
   triggers = {
     excludes_hash    = sha256(jsonencode(local.default_merged_excludes))
     account_id       = var.cloudflare_account_id
-    api_email        = var.cloudflare_api_email
-    api_key          = var.cloudflare_api_key
+    api_token        = var.cloudflare_api_token
     captive_hosts    = local.captive_portal_hosts_json
   }
 
@@ -22,8 +21,7 @@ resource "null_resource" "default_split_tunnel_excludes" {
     command = <<-EOT
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/exclude" \
-        -H "X-Auth-Email: ${var.cloudflare_api_email}" \
-        -H "X-Auth-Key: ${var.cloudflare_api_key}" \
+        -H "Authorization: Bearer ${var.cloudflare_api_token}" \
         -H "Content-Type: application/json" \
         -d '${jsonencode(local.default_merged_excludes)}'
     EOT
@@ -36,8 +34,7 @@ resource "null_resource" "default_split_tunnel_excludes" {
       # Get current excludes
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/exclude" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -49,8 +46,7 @@ resource "null_resource" "default_split_tunnel_excludes" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/exclude" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT
@@ -62,8 +58,7 @@ resource "null_resource" "default_local_domain_fallback" {
   triggers = {
     ldf_hash         = sha256(jsonencode(local.default_merged_ldf))
     account_id       = var.cloudflare_account_id
-    api_email        = var.cloudflare_api_email
-    api_key          = var.cloudflare_api_key
+    api_token        = var.cloudflare_api_token
     captive_suffixes = local.captive_portal_suffixes_json
   }
 
@@ -71,8 +66,7 @@ resource "null_resource" "default_local_domain_fallback" {
     command = <<-EOT
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/fallback_domains" \
-        -H "X-Auth-Email: ${var.cloudflare_api_email}" \
-        -H "X-Auth-Key: ${var.cloudflare_api_key}" \
+        -H "Authorization: Bearer ${var.cloudflare_api_token}" \
         -H "Content-Type: application/json" \
         -d '${jsonencode(local.default_merged_ldf)}'
     EOT
@@ -85,8 +79,7 @@ resource "null_resource" "default_local_domain_fallback" {
       # Get current LDF
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/fallback_domains" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -98,8 +91,7 @@ resource "null_resource" "default_local_domain_fallback" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/fallback_domains" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT
@@ -114,8 +106,7 @@ resource "null_resource" "custom_split_tunnel_excludes" {
     excludes_hash    = sha256(jsonencode(each.value))
     policy_id        = each.key
     account_id       = var.cloudflare_account_id
-    api_email        = var.cloudflare_api_email
-    api_key          = var.cloudflare_api_key
+    api_token        = var.cloudflare_api_token
     captive_hosts    = local.captive_portal_hosts_json
   }
 
@@ -123,8 +114,7 @@ resource "null_resource" "custom_split_tunnel_excludes" {
     command = <<-EOT
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/exclude" \
-        -H "X-Auth-Email: ${var.cloudflare_api_email}" \
-        -H "X-Auth-Key: ${var.cloudflare_api_key}" \
+        -H "Authorization: Bearer ${var.cloudflare_api_token}" \
         -H "Content-Type: application/json" \
         -d '${jsonencode(each.value)}'
     EOT
@@ -137,8 +127,7 @@ resource "null_resource" "custom_split_tunnel_excludes" {
       # Get current excludes
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/exclude" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -150,8 +139,7 @@ resource "null_resource" "custom_split_tunnel_excludes" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/exclude" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT
@@ -166,8 +154,7 @@ resource "null_resource" "custom_local_domain_fallback" {
     ldf_hash         = sha256(jsonencode(each.value))
     policy_id        = each.key
     account_id       = var.cloudflare_account_id
-    api_email        = var.cloudflare_api_email
-    api_key          = var.cloudflare_api_key
+    api_token        = var.cloudflare_api_token
     captive_suffixes = local.captive_portal_suffixes_json
   }
 
@@ -175,8 +162,7 @@ resource "null_resource" "custom_local_domain_fallback" {
     command = <<-EOT
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/fallback_domains" \
-        -H "X-Auth-Email: ${var.cloudflare_api_email}" \
-        -H "X-Auth-Key: ${var.cloudflare_api_key}" \
+        -H "Authorization: Bearer ${var.cloudflare_api_token}" \
         -H "Content-Type: application/json" \
         -d '${jsonencode(each.value)}'
     EOT
@@ -189,8 +175,7 @@ resource "null_resource" "custom_local_domain_fallback" {
       # Get current LDF
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/fallback_domains" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -202,8 +187,7 @@ resource "null_resource" "custom_local_domain_fallback" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/fallback_domains" \
-        -H "X-Auth-Email: ${self.triggers.api_email}" \
-        -H "X-Auth-Key: ${self.triggers.api_key}" \
+        -H "Authorization: Bearer ${self.triggers.api_token}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT

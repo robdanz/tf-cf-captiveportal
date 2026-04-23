@@ -5,9 +5,8 @@ data "http" "default_profile" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 
@@ -16,9 +15,8 @@ data "http" "default_split_tunnel_excludes" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/exclude"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 
@@ -27,9 +25,8 @@ data "http" "default_split_tunnel_includes" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/include"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 
@@ -38,9 +35,8 @@ data "http" "default_local_domain_fallback" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/fallback_domains"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 
@@ -49,9 +45,8 @@ data "http" "custom_profiles" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policies"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 

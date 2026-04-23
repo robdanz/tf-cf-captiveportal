@@ -12,9 +12,8 @@ data "http" "custom_profile_excludes" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/exclude"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 
@@ -24,9 +23,8 @@ data "http" "custom_profile_includes" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/include"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 
@@ -36,9 +34,8 @@ data "http" "custom_profile_ldf" {
   url = "https://api.cloudflare.com/client/v4/accounts/${var.cloudflare_account_id}/devices/policy/${each.key}/fallback_domains"
 
   request_headers = {
-    X-Auth-Email = var.cloudflare_api_email
-    X-Auth-Key   = var.cloudflare_api_key
-    Content-Type = "application/json"
+    Authorization = "Bearer ${var.cloudflare_api_token}"
+    Content-Type  = "application/json"
   }
 }
 
