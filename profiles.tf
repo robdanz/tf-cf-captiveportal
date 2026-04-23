@@ -34,7 +34,7 @@ resource "null_resource" "default_split_tunnel_excludes" {
       # Get current excludes
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/exclude" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -46,7 +46,7 @@ resource "null_resource" "default_split_tunnel_excludes" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/exclude" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT
@@ -79,7 +79,7 @@ resource "null_resource" "default_local_domain_fallback" {
       # Get current LDF
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/fallback_domains" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -91,7 +91,7 @@ resource "null_resource" "default_local_domain_fallback" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/fallback_domains" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT
@@ -127,7 +127,7 @@ resource "null_resource" "custom_split_tunnel_excludes" {
       # Get current excludes
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/exclude" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -139,7 +139,7 @@ resource "null_resource" "custom_split_tunnel_excludes" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/exclude" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT
@@ -175,7 +175,7 @@ resource "null_resource" "custom_local_domain_fallback" {
       # Get current LDF
       CURRENT=$(curl -s -X GET \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/fallback_domains" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json")
 
       # Filter out captive portal entries
@@ -187,7 +187,7 @@ resource "null_resource" "custom_local_domain_fallback" {
       # Update with filtered list
       curl -s -X PUT \
         "https://api.cloudflare.com/client/v4/accounts/${self.triggers.account_id}/devices/policy/${self.triggers.policy_id}/fallback_domains" \
-        -H "Authorization: Bearer ${self.triggers.api_token}" \
+        -H "Authorization: Bearer ${lookup(self.triggers, "api_token", "")}" \
         -H "Content-Type: application/json" \
         -d "$FILTERED"
     EOT

@@ -44,7 +44,7 @@ locals {
   custom_profile_raw = {
     for id, p in local.custom_profiles_map : id => {
       policy_id   = id
-      name        = p.name
+      name        = try(p.name, "")
       description = try(p.description, "")
       enabled     = try(p.enabled, true)
       precedence  = try(p.precedence, 100)
