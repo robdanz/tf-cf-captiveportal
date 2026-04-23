@@ -22,7 +22,7 @@ For each WARP device profile in your account, this configuration:
 
 - [Terraform](https://www.terraform.io/downloads) >= 1.0
 - Cloudflare account with Zero Trust enabled
-- API credentials with Zero Trust Write permissions
+- Cloudflare scoped API token with **Zero Trust Edit** permission (account-scoped)
 
 ## Usage
 
@@ -40,9 +40,10 @@ For each WARP device profile in your account, this configuration:
 3. Edit `terraform.tfvars` with your Cloudflare credentials:
    ```hcl
    cloudflare_account_id = "your-account-id"
-   cloudflare_api_email  = "your-email@example.com"
-   cloudflare_api_key    = "your-global-api-key"
+   cloudflare_api_token  = "your-scoped-api-token"
    ```
+
+   Create the token at: **Cloudflare Dashboard > My Profile > API Tokens > Create Token**, selecting the **Zero Trust Edit** account permission.
 
 4. Initialize Terraform:
    ```bash
@@ -102,7 +103,7 @@ After applying, Terraform will output:
 
 ### "API error" during apply
 
-Ensure your API key has Zero Trust Write permissions. You can verify by checking the API tokens page in the Cloudflare dashboard.
+Ensure your API token has the **Zero Trust Edit** account permission. You can verify at **Cloudflare Dashboard > My Profile > API Tokens**.
 
 ### Changes not appearing in dashboard
 
